@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         context: [app, scripts]
-        platform: [linux/amd64,linux/arm64]
+        platform: [linux/amd64,linux/arm64/v8]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
