@@ -18,5 +18,5 @@ RUN apt update -y
 RUN apt upgrade -y
 COPY --from=builder /dist/bin/server /usr/local/bin/server
 EXPOSE 8080
-WORKDIR /var/lib/iot-server
+WORKDIR /var/lib/iot-api-server
 ENTRYPOINT ["/usr/local/bin/server"]

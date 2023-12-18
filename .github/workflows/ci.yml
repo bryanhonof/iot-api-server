@@ -5,6 +5,9 @@ on:
 
 jobs:
   buildx:
+    strategy:
+      matrix:
+        context: [app, scripts]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,9 +21,9 @@ jobs:
         with:
             username: ${{ secrets.DOCKERHUB_USERNAME }}
             password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+      - name: Build and push app
         uses: docker/build-push-action@v5
         with:
-            context: ./app
+            context: ./${{ matrix.context }}
             push: true
-            tags: ${{ secrets.DOCKERHUB_USERNAME }}/iot-api-server:latest
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/iot-api-server-${{ matrix.context }}:latest

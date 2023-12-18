@@ -1,10 +1,12 @@
 services:
   api-server:
-    build: .
+    image: bryanhonof/iot-api-server-app
     ports:
       - "8080:8080"
     volumes:
-      - iot-db:/var/lib/iot-server
+      - db:/var/lib/iot-api-server
+    networks:
+      - backend
   grafana:
     image: grafana/grafana-enterprise
     container_name: grafana
@@ -13,7 +15,11 @@ services:
      - '3000:3000'
     volumes:
       - grafana-storage:/var/lib/grafana
-      - iot-db:/var/lib/iot-server
+      - db:/var/lib/iot-api-server
+    networks:
+      - backend
 volumes:
   grafana-storage: {}
-  iot-db: {}
+  db: {}
+networks:
+  backend:
