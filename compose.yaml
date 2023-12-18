@@ -2,7 +2,7 @@ services:
   app:
     image: bryanhonof/iot-api-server-app
     ports:
-      - "8080:8080"
+      - "8080"
     volumes:
       - db:/var/lib/iot-api-server
     networks:
@@ -12,7 +12,7 @@ services:
     container_name: grafana
     restart: unless-stopped
     ports:
-     - '3000:3000'
+     - "3000"
     volumes:
       - grafana-storage:/var/lib/grafana
       - db:/var/lib/iot-api-server

@@ -1,4 +1,5 @@
 https://iot.pxl.bjth.xyz {
 	encode zstd gzip
 	reverse_proxy /api/* app:8080
+    reverse_proxy /grafana/* grafana:3000
 }
