@@ -1,5 +1,5 @@
 services:
-  api-server:
+  app:
     image: bryanhonof/iot-api-server-app
     ports:
       - "8080:8080"
@@ -16,6 +16,19 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
       - db:/var/lib/iot-api-server
+    networks:
+      - backend
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $PWD/webserver/Caddyfile:/etc/caddy/Caddyfile
     networks:
       - backend
 volumes:

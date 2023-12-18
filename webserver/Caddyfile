@@ -1,0 +1,4 @@
+https://iot.pxl.bjth.xyz {
+	encode zstd gzip
+	reverse_proxy /api/* app:8080
+}
