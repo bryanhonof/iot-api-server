@@ -21,5 +21,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+            context: ./app
             push: true
-            tags: bryanhonof/iot-api-server:latest
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/iot-api-server:latest
