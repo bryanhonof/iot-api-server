@@ -19,9 +19,10 @@ type temperature struct {
 }
 
 type RGBLED struct {
-	R uint8 `json:"R"`
-	G uint8 `json:"G"`
-	B uint8 `json:"B"`
+	R          uint8 `json:"R"`
+	G          uint8 `json:"G"`
+	B          uint8 `json:"B"`
+	Brightness uint8 `json:"Brightness"`
 }
 
 // Simple middleware to check for API key based on if the sqlite3 database exists or not
@@ -166,7 +167,6 @@ func getLED(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
-	fmt.Println(string(LEDData))
 
 	//HTTP okay + LEDdata
 	c.JSON(http.StatusOK, string(LEDData))
