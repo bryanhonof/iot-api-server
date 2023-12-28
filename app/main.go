@@ -140,20 +140,77 @@ func putTemperature(c *gin.Context) {
 }
 
 func getLED(c *gin.Context) {
-	var R, G, B uint8 = 255, 255, 255
-	LEDVal := RGBLED{
-		R: R,
-		G: G,
-		B: B,
+	token := c.GetHeader("X-Api-Key")
+	jsonPath := fmt.Sprintf("./%s.json", token)
+
+	//opens a json file with the path of the API key
+	jsonFile, err := os.Open(jsonPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
 	}
-	fmt.Printf("Red: %d, Green: %d, Blue: %d\n", LEDVal.R, LEDVal.G, LEDVal.B)
+	defer jsonFile.Close()
+
+	// json file -> RGBLED struct
+	var LEDVal RGBLED
+	decoder := json.NewDecoder(jsonFile)
+	err = decoder.Decode(&LEDVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	// RGBLED struct -> json string
 	LEDData, err := json.Marshal(LEDVal)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 	fmt.Println(string(LEDData))
+
+	//HTTP okay + LEDdata
 	c.JSON(http.StatusOK, string(LEDData))
+}
+
+func putLED(c *gin.Context) {
+	token := c.GetHeader("X-Api-Key")
+	jsonPath := fmt.Sprintf("./%s.json", token)
+
+	//creates a json file with the path of the API key
+	jsonFile, err := os.Create(jsonPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	defer jsonFile.Close()
+
+	//data recieved -> RGBLED struct
+	var newRGBLED RGBLED
+	if err := c.BindJSON(&newRGBLED); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	//RGBLED struct -> json string
+	jsonData, err := json.MarshalIndent(newRGBLED, "", "  ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	// json string -> json file
+	_, err = jsonFile.Write(jsonData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	//HTTP okay
+	c.JSON(http.StatusOK, "RGB values recieved")
 }
 
 func main() {
@@ -167,6 +224,7 @@ func main() {
 		v1.PUT("/temperature", putTemperature)
 		// LED
 		v1.GET("/LED", getLED)
+		v1.PUT("/LED", putLED)
 	}
 
 	router.Run(":8080")
