@@ -141,8 +141,6 @@ func main() {
 		v1.Use(tokenAuthMIddleWare())
 		v1.GET("/temperature", getTemperature)
 		v1.PUT("/temperature", putTemperature)
-
-		v1.GET("/LED", func(c *gin.Context {c.JSON("LED")}))
 	}
 
 	router.Run(":8080")
