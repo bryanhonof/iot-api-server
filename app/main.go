@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,12 @@ type temperature struct {
 	Id    int     `json:"id"`
 	Value float64 `json:"value"`
 	Scale string  `json:"scale"`
+}
+
+type RGBLED struct {
+	R uint8 `json:"R"`
+	G uint8 `json:"G"`
+	B uint8 `json:"B"`
 }
 
 // Simple middleware to check for API key based on if the sqlite3 database exists or not
@@ -133,7 +140,20 @@ func putTemperature(c *gin.Context) {
 }
 
 func getLED(c *gin.Context) {
-	print("LED")
+	var R, G, B uint8 = 255, 255, 255
+	LEDVal := RGBLED{
+		R: R,
+		G: G,
+		B: B,
+	}
+	fmt.Printf("Red: %d, Green: %d, Blue: %d\n", LEDVal.R, LEDVal.G, LEDVal.B)
+	LEDData, err := json.Marshal(LEDVal)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println(string(LEDData))
+	c.JSON(http.StatusOK, string(LEDData))
 }
 
 func main() {
