@@ -120,7 +120,6 @@ func putTemperature(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
 	// Commit the transaction
 	err = tx.Commit()
 	if err != nil {
@@ -133,14 +132,21 @@ func putTemperature(c *gin.Context) {
 	c.JSON(http.StatusCreated, newTemperature)
 }
 
+func getLED(c *gin.Context) {
+	print("LED")
+}
+
 func main() {
 	router := gin.Default()
 
 	v1 := router.Group("/api/v1")
 	{
 		v1.Use(tokenAuthMIddleWare())
+		// temprature
 		v1.GET("/temperature", getTemperature)
 		v1.PUT("/temperature", putTemperature)
+		// LED
+		v1.GET("/LED", getLED)
 	}
 
 	router.Run(":8080")
