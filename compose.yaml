@@ -1,6 +1,6 @@
 services:
   app:
-    image: bryanhonof/iot-api-server-app
+    image: monsterseppe/iot-api-server-app
     ports:
       - "8080"
     volumes:

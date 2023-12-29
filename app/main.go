@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,13 @@ type temperature struct {
 	Id    int     `json:"id"`
 	Value float64 `json:"value"`
 	Scale string  `json:"scale"`
+}
+
+type RGBLED struct {
+	R          uint8 `json:"R"`
+	G          uint8 `json:"G"`
+	B          uint8 `json:"B"`
+	Brightness uint8 `json:"Brightness"`
 }
 
 // Simple middleware to check for API key based on if the sqlite3 database exists or not
@@ -120,7 +128,6 @@ func putTemperature(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
 	// Commit the transaction
 	err = tx.Commit()
 	if err != nil {
@@ -133,14 +140,91 @@ func putTemperature(c *gin.Context) {
 	c.JSON(http.StatusCreated, newTemperature)
 }
 
+func getLED(c *gin.Context) {
+	token := c.GetHeader("X-Api-Key")
+	jsonPath := fmt.Sprintf("./%s.json", token)
+
+	//opens a json file with the path of the API key
+	jsonFile, err := os.Open(jsonPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+	defer jsonFile.Close()
+
+	// json file -> RGBLED struct
+	var LEDVal RGBLED
+	decoder := json.NewDecoder(jsonFile)
+	err = decoder.Decode(&LEDVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	// RGBLED struct -> json string
+	LEDData, err := json.Marshal(LEDVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	//HTTP okay + LEDdata
+	c.JSON(http.StatusOK, string(LEDData))
+}
+
+func putLED(c *gin.Context) {
+	token := c.GetHeader("X-Api-Key")
+	jsonPath := fmt.Sprintf("./%s.json", token)
+
+	//creates a json file with the path of the API key
+	jsonFile, err := os.Create(jsonPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	defer jsonFile.Close()
+
+	//data recieved -> RGBLED struct
+	var newRGBLED RGBLED
+	if err := c.BindJSON(&newRGBLED); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	//RGBLED struct -> json string
+	jsonData, err := json.MarshalIndent(newRGBLED, "", "  ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	// json string -> json file
+	_, err = jsonFile.Write(jsonData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	//HTTP okay
+	c.JSON(http.StatusOK, "RGB values recieved")
+}
+
 func main() {
 	router := gin.Default()
 
 	v1 := router.Group("/api/v1")
 	{
 		v1.Use(tokenAuthMIddleWare())
+		// temprature
 		v1.GET("/temperature", getTemperature)
 		v1.PUT("/temperature", putTemperature)
+		// LED
+		v1.GET("/LED", getLED)
+		v1.PUT("/LED", putLED)
 	}
 
 	router.Run(":8080")
